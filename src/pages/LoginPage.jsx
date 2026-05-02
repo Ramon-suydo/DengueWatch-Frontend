@@ -1,22 +1,40 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import BrandMark from '../components/BrandMark';
 import LandingLayout from '../layout/LandingLayout';
+import api from '../services/api';
 
 function LoginPage() {
   const navigate = useNavigate();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+    setError('');
+    setLoading(true);
 
     const formData = new FormData(event.currentTarget);
     const email = formData.get('email');
-    const derivedName =
-      typeof email === 'string' && email.trim()
-        ? email.split('@')[0].replace(/[._-]+/g, ' ')
-        : 'Community Resident';
+    const password = formData.get('password');
 
-    localStorage.setItem('denguewatch.userName', derivedName);
-    navigate('/select-barangay');
+    try {
+      const res = await api.login(email, password);
+
+      if (res.success) {
+        // Admin login
+        localStorage.setItem('denguewatch.token', res.data.token);
+        localStorage.setItem('denguewatch.userName', res.data.user.name);
+        localStorage.setItem('denguewatch.role', res.data.user.role);
+        navigate('/dashboard');
+      } else {
+        setError(res.message || 'Invalid credentials');
+      }
+    } catch (err) {
+      setError('Could not connect to server. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -33,17 +51,19 @@ function LoginPage() {
               Welcome back
             </h1>
             <p className="mt-3 text-sm leading-7 text-ink/70 sm:text-base">
-              Log in to view localized dengue risk updates, alerts, and
-              community insights.
+              Log in to view localized dengue risk updates, alerts, and community insights.
             </p>
           </div>
 
+          {error && (
+            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label
-                className="mb-2 block text-sm font-semibold text-navy"
-                htmlFor="email"
-              >
+              <label className="mb-2 block text-sm font-semibold text-navy" htmlFor="email">
                 Email
               </label>
               <input
@@ -51,36 +71,33 @@ function LoginPage() {
                 id="email"
                 name="email"
                 placeholder="Enter your email"
+                required
                 type="email"
               />
             </div>
 
             <div>
               <div className="mb-2 flex items-center justify-between gap-3">
-                <label
-                  className="block text-sm font-semibold text-navy"
-                  htmlFor="password"
-                >
+                <label className="block text-sm font-semibold text-navy" htmlFor="password">
                   Password
                 </label>
-                <span className="text-sm font-medium text-navy/70">
-                  Forgot password?
-                </span>
               </div>
               <input
                 className="w-full rounded-2xl border border-navy/10 bg-white px-4 py-3.5 text-base text-ink shadow-soft outline-none transition placeholder:text-ink/35 focus:border-navy/30 focus:ring-4 focus:ring-navy/10"
                 id="password"
                 name="password"
                 placeholder="Enter your password"
+                required
                 type="password"
               />
             </div>
 
             <button
-              className="w-full rounded-2xl bg-navy px-8 py-4 text-base font-semibold text-paper shadow-button transition hover:-translate-y-0.5 hover:bg-[#0f3460]"
+              className="w-full rounded-2xl bg-navy px-8 py-4 text-base font-semibold text-paper shadow-button transition hover:-translate-y-0.5 hover:bg-[#0f3460] disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={loading}
               type="submit"
             >
-              Login
+              {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
 

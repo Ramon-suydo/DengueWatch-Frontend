@@ -4,7 +4,9 @@ import LoginPage from './pages/LoginPage';
 import BarangaySelectionPage from './pages/BarangaySelectionPage';
 import DashboardPage from './pages/DashboardPage';
 import SignUpPage from './pages/SignUpPage';
+import MapPage from './pages/MapPage';
 import MainLayout from './layout/MainLayout';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -16,11 +18,23 @@ function App() {
         <Route element={<BarangaySelectionPage />} path="/select-barangay" />
         <Route
           element={
-            <MainLayout>
-              <DashboardPage />
-            </MainLayout>
+            <ProtectedRoute>
+              <MainLayout>
+                <DashboardPage />
+              </MainLayout>
+            </ProtectedRoute>
           }
           path="/dashboard"
+        />
+        <Route
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <MapPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+          path="/map"
         />
       </Routes>
     </BrowserRouter>
