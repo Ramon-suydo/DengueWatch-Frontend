@@ -12,10 +12,10 @@ function SignUpPage() {
     const fullName = formData.get('fullName');
 
     localStorage.setItem(
-      'denguewatch.userName',
+      'userName',
       typeof fullName === 'string' && fullName.trim()
         ? fullName.trim()
-        : 'Community Resident'
+        : 'User'
     );
 
     navigate('/select-barangay');

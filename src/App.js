@@ -3,6 +3,10 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import BarangaySelectionPage from './pages/BarangaySelectionPage';
 import DashboardPage from './pages/DashboardPage';
+import MapPage from './pages/MapPage';
+import AlertsPage from './pages/AlertsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import ChatPage from './pages/ChatPage';
 import SignUpPage from './pages/SignUpPage';
 import MainLayout from './layout/MainLayout';
 
@@ -16,11 +20,43 @@ function App() {
         <Route element={<BarangaySelectionPage />} path="/select-barangay" />
         <Route
           element={
-            <MainLayout>
+            <MainLayout pageTitle="Dashboard">
               <DashboardPage />
             </MainLayout>
           }
           path="/dashboard"
+        />
+        <Route
+          element={
+            <MainLayout pageTitle="Map View">
+              <MapPage />
+            </MainLayout>
+          }
+          path="/map"
+        />
+        <Route
+          element={
+            <MainLayout pageTitle="Alerts">
+              <AlertsPage />
+            </MainLayout>
+          }
+          path="/alerts"
+        />
+        <Route
+          element={
+            <MainLayout pageTitle="Analytics">
+              <AnalyticsPage />
+            </MainLayout>
+          }
+          path="/analytics"
+        />
+        <Route
+          element={
+            <MainLayout pageTitle="AI Assistant">
+              <ChatPage />
+            </MainLayout>
+          }
+          path="/chat"
         />
       </Routes>
     </BrowserRouter>

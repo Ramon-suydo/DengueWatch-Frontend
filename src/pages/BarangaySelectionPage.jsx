@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BrandMark from '../components/BrandMark';
 import LandingLayout from '../layout/LandingLayout';
 
-const BARANGAYS = ['Barangay 1', 'Barangay 2', 'Barangay 3'];
+const BARANGAYS = ['Brgy. 001 - Tondo', 'Brgy. 002 - Tondo', 'Brgy. 003 - Tondo', 'Brgy. 004 - Tondo', 'Brgy. 005 - Tondo'];
 
 function BarangaySelectionPage() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ function BarangaySelectionPage() {
       return;
     }
 
-    localStorage.setItem('denguewatch.selectedBarangay', selectedBarangay);
+    localStorage.setItem('selectedBarangay', selectedBarangay);
     navigate('/dashboard');
   };
 
