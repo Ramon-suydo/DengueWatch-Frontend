@@ -3,6 +3,10 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import BarangaySelectionPage from './pages/BarangaySelectionPage';
 import DashboardPage from './pages/DashboardPage';
+import MapPage from './pages/MapPage';
+import AlertsPage from './pages/AlertsPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import ChatPage from './pages/ChatPage';
 import SignUpPage from './pages/SignUpPage';
 import MapPage from './pages/MapPage';
 import MainLayout from './layout/MainLayout';
@@ -18,16 +22,23 @@ function App() {
         <Route element={<BarangaySelectionPage />} path="/select-barangay" />
         <Route
           element={
+<<<<<<< HEAD
             <ProtectedRoute>
               <MainLayout>
                 <DashboardPage />
               </MainLayout>
             </ProtectedRoute>
+=======
+            <MainLayout pageTitle="Dashboard">
+              <DashboardPage />
+            </MainLayout>
+>>>>>>> origin/frontend-ui-updates
           }
           path="/dashboard"
         />
         <Route
           element={
+<<<<<<< HEAD
             <ProtectedRoute>
               <MainLayout>
                 <MapPage />
@@ -36,6 +47,38 @@ function App() {
           }
           path="/map"
         />
+=======
+            <MainLayout pageTitle="Map View">
+              <MapPage />
+            </MainLayout>
+          }
+          path="/map"
+        />
+        <Route
+          element={
+            <MainLayout pageTitle="Alerts">
+              <AlertsPage />
+            </MainLayout>
+          }
+          path="/alerts"
+        />
+        <Route
+          element={
+            <MainLayout pageTitle="Analytics">
+              <AnalyticsPage />
+            </MainLayout>
+          }
+          path="/analytics"
+        />
+        <Route
+          element={
+            <MainLayout pageTitle="AI Assistant">
+              <ChatPage />
+            </MainLayout>
+          }
+          path="/chat"
+        />
+>>>>>>> origin/frontend-ui-updates
       </Routes>
     </BrowserRouter>
   );

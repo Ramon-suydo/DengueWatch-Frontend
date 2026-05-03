@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BrandMark from '../components/BrandMark';
 import LandingLayout from '../layout/LandingLayout';
 
+<<<<<<< HEAD
 const BARANGAYS = [
   'Barangay 1', 'Barangay 2', 'Barangay 3', 'Barangay 4', 'Barangay 5',
   'Barangay 6', 'Barangay 7', 'Barangay 8', 'Barangay 9', 'Barangay 10',
@@ -26,6 +27,9 @@ const BARANGAYS = [
   'Barangay 96', 'Barangay 97', 'Barangay 98', 'Barangay 99', 'Barangay 100',
   'Barangay 101', 'Barangay 102', 'Barangay 103', 'Barangay 104', 'Barangay 105',
 ];
+=======
+const BARANGAYS = ['Brgy. 001 - Tondo', 'Brgy. 002 - Tondo', 'Brgy. 003 - Tondo', 'Brgy. 004 - Tondo', 'Brgy. 005 - Tondo'];
+>>>>>>> origin/frontend-ui-updates
 
 function BarangaySelectionPage() {
   const navigate = useNavigate();
@@ -37,8 +41,16 @@ function BarangaySelectionPage() {
   );
 
   const handleContinue = () => {
+<<<<<<< HEAD
     if (!selectedBarangay) return;
     localStorage.setItem('denguewatch.selectedBarangay', selectedBarangay);
+=======
+    if (!selectedBarangay) {
+      return;
+    }
+
+    localStorage.setItem('selectedBarangay', selectedBarangay);
+>>>>>>> origin/frontend-ui-updates
     navigate('/dashboard');
   };
 

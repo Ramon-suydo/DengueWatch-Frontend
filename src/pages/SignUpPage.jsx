@@ -17,6 +17,7 @@ function SignUpPage() {
     const password = formData.get('password');
     const confirmPassword = formData.get('confirmPassword');
 
+<<<<<<< HEAD
     // Validation
     if (!fullName.trim()) {
       setError('Full name is required.');
@@ -38,6 +39,14 @@ function SignUpPage() {
     // Save to localStorage
     localStorage.setItem('denguewatch.userName', fullName.trim());
     localStorage.setItem('denguewatch.userEmail', email.trim());
+=======
+    localStorage.setItem(
+      'userName',
+      typeof fullName === 'string' && fullName.trim()
+        ? fullName.trim()
+        : 'User'
+    );
+>>>>>>> origin/frontend-ui-updates
 
     navigate('/select-barangay');
   };
