@@ -28,6 +28,34 @@ const api = {
         return res.json();
     },
 
+    // Prediction - public
+    getPrediction: async (city) => {
+        const res = await fetch(`${BASE_URL}/prediction?city=${encodeURIComponent(city)}`);
+        return res.json();
+    },
+
+    getAllCityRisks: async () => {
+        const res = await fetch(`${BASE_URL}/prediction/cities`);
+        return res.json();
+    },
+
+    getBarangayRisk: async (city, barangay, district = '') => {
+        const params = new URLSearchParams({ city, barangay, ...(district && { district }) });
+        const res = await fetch(`${BASE_URL}/prediction/barangay?${params}`);
+        return res.json();
+    },
+
+    getDistrictRisk: async (city, district) => {
+        const params = new URLSearchParams({ city, district });
+        const res = await fetch(`${BASE_URL}/prediction/district?${params}`);
+        return res.json();
+    },
+
+    getProvincePredictions: async () => {
+        const res = await fetch(`${BASE_URL}/prediction/provinces`);
+        return res.json();
+    },
+
     // Admin auth
     login: async (email, password) => {
         const res = await fetch(`${BASE_URL}/auth/login`, {
