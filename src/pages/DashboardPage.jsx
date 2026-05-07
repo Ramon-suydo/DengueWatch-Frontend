@@ -32,7 +32,7 @@ function DashboardPage() {
   const riskScore = prediction?.riskPercentage || 0;
   const riskLevel = prediction?.riskLevel || 'Low';
   const riskLevelDisplay = `${riskLevel.toUpperCase()} RISK`;
-  const aiConfidence = prediction ? Math.min(95, 70 + Math.round(riskScore * 0.25)) : 0;
+  const aiConfidence = prediction?.confidence || 0;
   const totalReports = summary?.totalReports || 0;
 
   const getRiskBorderColor = () => {
@@ -54,21 +54,7 @@ function DashboardPage() {
   };
 
   // 7-day forecast based on prediction
-  const getForecastRisk = (offset) => {
-    const base = riskScore + (Math.random() * 20 - 10);
-    if (base >= 70) return { risk: 'high', label: 'High' };
-    if (base >= 40) return { risk: 'moderate', label: 'Moderate' };
-    return { risk: 'low', label: 'Low' };
-  };
-
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const forecast = days.map((day, i) => ({ day, ...getForecastRisk(i) }));
-
-  const getDotColor = (risk) => {
-    if (risk === 'high') return 'bg-alert';
-    if (risk === 'moderate') return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
+  const forecast = prediction?.forecast || [];
 
   if (loading) {
     return (
@@ -167,16 +153,20 @@ function DashboardPage() {
           {forecast.map((day, idx) => (
             <div
               key={idx}
-              className={`flex flex-col items-center gap-2 rounded-lg p-3 min-w-[60px] ${
+              className={`flex flex-col items-center gap-2 rounded-lg p-3 min-w-[70px] ${
                 idx === 0 ? 'bg-navy text-white' : 'bg-white border border-navy/10'
               }`}
             >
-              <span className="text-xs font-semibold">
-                {idx === 0 ? 'Today' : day.day}
-              </span>
-              <div className={`h-3 w-3 rounded-full ${getDotColor(day.risk)}`} />
+              <span className="text-xs font-semibold">{day.day}</span>
+              <div className={`h-3 w-3 rounded-full ${
+                day.riskLevel === 'High' ? 'bg-alert' :
+                day.riskLevel === 'Medium' ? 'bg-yellow-500' : 'bg-green-500'
+              }`} />
               <span className={`text-xs font-medium ${idx === 0 ? 'text-white' : 'text-ink/70'}`}>
-                {day.label}
+                {day.riskLevel}
+              </span>
+              <span className={`text-[10px] ${idx === 0 ? 'text-white/70' : 'text-ink/50'}`}>
+                {day.rainfall}mm
               </span>
             </div>
           ))}
@@ -193,8 +183,8 @@ function DashboardPage() {
             <h3 className="text-4xl font-black text-navy">
               {prediction?.factors?.historical?.totalCases?.toLocaleString() || 0}
             </h3>
-              <p className="mt-1 text-sm font-medium text-ink/60"> total cases in {selectedCity}
-          </p>
+            <p className="mt-1 text-sm font-medium text-ink/60"> total cases in {selectedCity}
+            </p>
           </div>
           <div className="ml-auto flex flex-col items-end gap-1">
             <div className="flex items-center gap-1.5">
@@ -213,9 +203,10 @@ function DashboardPage() {
         </p>
         <div className="mt-4 flex items-center gap-4">
           <div>
-            <p className="text-4xl font-black text-navy">{aiConfidence}%</p>
+            <p className="text-4xl font-black text-navy">{prediction?.confidence || 0}%</p>
             <p className="mt-1 text-xs text-ink/60">
-              Model accuracy<br />on recent data
+              Based on {prediction?.factors?.historical?.recordCount || 0} DOH records
+              Model: Weighted Ensemble
             </p>
           </div>
           <div className="ml-auto flex h-20 w-20 items-center justify-center rounded-full border-4 border-navy/20">

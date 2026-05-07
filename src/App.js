@@ -12,8 +12,10 @@ import ChatPage from './pages/ChatPage';
 import SignUpPage from './pages/SignUpPage';
 import MainLayout from './layout/MainLayout';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
+import ToastProvider from './components/ToastProvider';
 
-function App() {
+function AppContent() {
   return (
     <BrowserRouter>
       <Routes>
@@ -75,6 +77,16 @@ function App() {
         />
       </Routes>
     </BrowserRouter>
+  );
+}
+
+function App() {
+  return (
+    <ErrorBoundary>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
 

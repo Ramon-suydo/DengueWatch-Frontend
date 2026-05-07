@@ -2,21 +2,43 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import BrandMark from '../components/BrandMark';
 import LandingLayout from '../layout/LandingLayout';
+import { useToast } from '../components/ToastProvider';
+import { validateEmail } from '../utils/validation';
 import api from '../services/api';
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [error, setError] = useState('');
+  const { showToast } = useToast();
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError('');
+    setErrors({});
     setLoading(true);
 
     const formData = new FormData(event.currentTarget);
     const email = formData.get('email');
     const password = formData.get('password');
+
+    // Validate input
+    const validationErrors = {};
+
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.valid) {
+      validationErrors.email = emailValidation.error;
+    }
+
+    if (!password) {
+      validationErrors.password = 'Password is required';
+    }
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      showToast('Please fix the errors below', 'error');
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await api.login(email, password);
@@ -26,12 +48,15 @@ function LoginPage() {
         localStorage.setItem('denguewatch.token', res.data.token);
         localStorage.setItem('denguewatch.userName', res.data.user.name);
         localStorage.setItem('denguewatch.role', res.data.user.role);
+        
+        showToast(`Welcome back, ${res.data.user.name}!`, 'success');
         navigate('/dashboard');
       } else {
-        setError(res.message || 'Invalid credentials');
+        showToast(res.message || 'Invalid credentials', 'error');
       }
     } catch (err) {
-      setError('Could not connect to server. Please try again.');
+      showToast('Could not connect to server. Please check your connection.', 'error');
+      console.error('Login error:', err);
     } finally {
       setLoading(false);
     }
@@ -55,25 +80,29 @@ function LoginPage() {
             </p>
           </div>
 
-          {error && (
-            <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-              {error}
-            </div>
-          )}
-
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
             <div>
               <label className="mb-2 block text-sm font-semibold text-navy" htmlFor="email">
                 Email
               </label>
               <input
-                className="w-full rounded-2xl border border-navy/10 bg-white px-4 py-3.5 text-base text-ink shadow-soft outline-none transition placeholder:text-ink/35 focus:border-navy/30 focus:ring-4 focus:ring-navy/10"
+                className={`w-full rounded-2xl border ${
+                  errors.email ? 'border-red-300 bg-red-50' : 'border-navy/10 bg-white'
+                } px-4 py-3.5 text-base text-ink shadow-soft outline-none transition placeholder:text-ink/35 focus:border-navy/30 focus:ring-4 focus:ring-navy/10`}
                 id="email"
                 name="email"
                 placeholder="Enter your email"
                 required
                 type="email"
+                disabled={loading}
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? 'email-error' : undefined}
               />
+              {errors.email && (
+                <div id="email-error" role="alert" className="mt-1 text-sm text-red-600">
+                  {errors.email}
+                </div>
+              )}
             </div>
 
             <div>
@@ -83,19 +112,30 @@ function LoginPage() {
                 </label>
               </div>
               <input
-                className="w-full rounded-2xl border border-navy/10 bg-white px-4 py-3.5 text-base text-ink shadow-soft outline-none transition placeholder:text-ink/35 focus:border-navy/30 focus:ring-4 focus:ring-navy/10"
+                className={`w-full rounded-2xl border ${
+                  errors.password ? 'border-red-300 bg-red-50' : 'border-navy/10 bg-white'
+                } px-4 py-3.5 text-base text-ink shadow-soft outline-none transition placeholder:text-ink/35 focus:border-navy/30 focus:ring-4 focus:ring-navy/10`}
                 id="password"
                 name="password"
                 placeholder="Enter your password"
                 required
                 type="password"
+                disabled={loading}
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'password-error' : undefined}
               />
+              {errors.password && (
+                <div id="password-error" role="alert" className="mt-1 text-sm text-red-600">
+                  {errors.password}
+                </div>
+              )}
             </div>
 
             <button
               className="w-full rounded-2xl bg-navy px-8 py-4 text-base font-semibold text-paper shadow-button transition hover:-translate-y-0.5 hover:bg-[#0f3460] disabled:cursor-not-allowed disabled:opacity-60"
               disabled={loading}
               type="submit"
+              aria-busy={loading}
             >
               {loading ? 'Logging in...' : 'Login'}
             </button>

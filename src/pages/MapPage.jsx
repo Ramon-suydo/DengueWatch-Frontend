@@ -18,6 +18,76 @@ const getRiskColor = (score) => {
   return '#22c55e';
 };
 
+// All 17 NCR cities
+const NCR_CITIES = [
+  'MANILA CITY',
+  'QUEZON CITY',
+  'CALOOCAN CITY',
+  'TAGUIG CITY',
+  'PASAY CITY',
+  'MAKATI CITY',
+  'LAS PIÑAS CITY',
+  'PARAÑAQUE CITY',
+  'NAVOTAS CITY',
+  'MALABON CITY',
+  'SAN JUAN',
+  'MARIKINA CITY',
+  'PASIG CITY',
+  'MANDALUYONG CITY',
+  'VALENZUELA CITY',
+  'MUNTINLUPA CITY',
+  'PATEROS'
+];
+
+// Helper function to check if a province is Metro Manila
+const isMetroManila = (name) => {
+  if (!name) return false;
+  const normalized = name.toUpperCase().trim();
+  return normalized.includes('METRO') && normalized.includes('MANILA') ||
+         normalized === 'METROPOLITAN MANILA';
+};
+
+// Helper function to get prediction data for a province
+const getPredictionData = (provinceName, predictions) => {
+  // Direct match first
+  if (predictions[provinceName]) {
+    return predictions[provinceName];
+  }
+
+  // Handle Metro Manila case - use highest risk from all NCR cities
+  if (isMetroManila(provinceName)) {
+    let maxRiskCity = null;
+    let maxRisk = -1;
+
+    NCR_CITIES.forEach(city => {
+      if (predictions[city] && predictions[city].riskPercentage > maxRisk) {
+        maxRisk = predictions[city].riskPercentage;
+        maxRiskCity = city;
+      }
+    });
+
+    if (maxRiskCity) {
+      return predictions[maxRiskCity]; // Return highest risk city data for Metro Manila
+    }
+  }
+
+  return null;
+};
+
+// Helper function to get top 3 highest risk NCR cities
+const getTopNCRCities = (predictions) => {
+  const ncrData = NCR_CITIES
+    .filter(city => predictions[city])
+    .map(city => ({
+      name: city,
+      ...predictions[city]
+    }))
+    .sort((a, b) => b.riskPercentage - a.riskPercentage)
+    .slice(0, 3);
+  
+  return ncrData;
+};
+
 const ProvincesLayer = ({ predictions }) => {
   const [geoData, setGeoData] = useState(null);
 
@@ -31,11 +101,13 @@ const ProvincesLayer = ({ predictions }) => {
   if (!geoData) return null;
 
   const getStyle = (feature) => {
-    const name = feature.properties?.PROVINCE ||
-                 feature.properties?.NAME_1 ||
-                 feature.properties?.name || '';
-    const pred = predictions[name];
-    const score = pred?.riskPercentage ?? Math.floor(Math.random() * 50) + 10;
+    const provinceName = feature.properties?.PROVINCE ||
+                         feature.properties?.NAME_1 ||
+                         feature.properties?.name || '';
+    
+    const pred = getPredictionData(provinceName, predictions);
+    const score = pred?.riskPercentage ?? 0;
+    
     return {
       fillColor: getRiskColor(score),
       fillOpacity: 0.4,
@@ -45,31 +117,32 @@ const ProvincesLayer = ({ predictions }) => {
   };
 
   const onEachFeature = (feature, layer) => {
-    const name = feature.properties?.PROVINCE ||
-                 feature.properties?.NAME_1 ||
-                 feature.properties?.name || 'Unknown';
-    const pred = predictions[name];
-    const score = pred?.riskPercentage ?? '—';
+    const provinceName = feature.properties?.PROVINCE ||
+                         feature.properties?.NAME_1 ||
+                         feature.properties?.name || 'Unknown';
+    
+    const pred = getPredictionData(provinceName, predictions);
+    const score = pred?.riskPercentage ?? null;
     const level = pred?.riskLevel ?? 'No data';
-    const color = getRiskColor(score !== '—' ? score : 30);
+    const color = getRiskColor(score !== null ? score : 0);
 
     layer.bindTooltip(`
       <div style="font-family:sans-serif;padding:6px 10px;font-size:13px">
-        <strong>${name}</strong><br/>
-        <span style="color:${color}">● ${level} Risk ${score !== '—' ? `(${score}%)` : ''}</span>
+        <strong>${provinceName}</strong><br/>
+        <span style="color:${color}">● ${level} Risk ${score !== null ? `(${score}%)` : '(No data)'}</span>
       </div>
     `, { sticky: true });
 
     layer.bindPopup(`
-      <div style="font-family:sans-serif;min-width:220px;padding:4px">
+      <div style="font-family:sans-serif;min-width:240px;padding:4px">
         <h3 style="margin:0 0 10px;font-size:16px;font-weight:bold;border-bottom:1px solid #eee;padding-bottom:8px">
-          📍 ${name}
+          📍 ${provinceName}
         </h3>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
           <div style="width:14px;height:14px;border-radius:50%;background:${color}"></div>
           <span style="font-weight:600;font-size:14px">${level} Risk</span>
         </div>
-        ${score !== '—' ? `
+        ${score !== null ? `
           <div style="margin-bottom:10px">
             <div style="font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">Risk Score</div>
             <div style="background:#f0f0f0;border-radius:6px;height:10px;overflow:hidden">
@@ -77,6 +150,17 @@ const ProvincesLayer = ({ predictions }) => {
             </div>
             <div style="font-size:20px;font-weight:bold;margin-top:4px;color:#1a1a2e">${score}%</div>
           </div>
+          ${isMetroManila(provinceName) ? `
+            <div style="margin-bottom:10px;background:#f8f8f8;padding:8px;border-radius:6px;border-left:3px solid ${color}">
+              <div style="font-size:11px;color:#888;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">Top 3 NCR Cities</div>
+              ${getTopNCRCities(predictions).map((city, idx) => `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-size:12px">
+                  <span>${idx + 1}. ${city.name}</span>
+                  <span style="font-weight:bold;color:${getRiskColor(city.riskPercentage)}">${city.riskPercentage}%</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
           ${pred?.factors ? `
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
               <div style="background:#f8f8f8;padding:6px;border-radius:6px;text-align:center">
@@ -119,12 +203,12 @@ const MapPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.getProvincePredictions()
-      .then(res => {
-        if (res.success) setPredictions(res.data);
-      })
-      .catch(err => console.error(err))
-      .finally(() => setLoading(false));
+    api.getAllCityRisks()
+        .then(res => {
+            if (res.success) setPredictions(res.data);
+        })
+        .catch(err => console.error(err))
+        .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -149,7 +233,7 @@ const MapPage = () => {
         minWidth: '180px'
       }}>
         <div style={{ fontWeight: 'bold', marginBottom: '12px', fontSize: '14px' }}>
-          🗺️ Risk Level
+          Risk Level
         </div>
         {[
           { color: '#ef4444', label: 'High Risk (≥70%)' },
