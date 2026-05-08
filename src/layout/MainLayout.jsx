@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home,
@@ -12,28 +12,48 @@ import {
   Info,
   HelpCircle,
   LogOut,
+  ChevronDown,
 } from 'lucide-react';
 
 const navItems = [
   { to: '/dashboard', label: 'Home', icon: Home },
   { to: '/map', label: 'Map', icon: Map },
   { to: '/alerts', label: 'Alerts', icon: Bell },
-  { to: '/chat', label: 'AI Chat', icon: MessageCircle },
+  { to: '/chat', label: 'Chat', icon: MessageCircle },
 ];
 
 function MainLayout({ children, pageTitle = 'Dashboard' }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const location = useLocation();
   const navigate = useNavigate();
 
   // Read from localStorage
-  const userName = localStorage.getItem('userName') || 'User';
-  const selectedBarangay =
-    localStorage.getItem('selectedBarangay') || 'Brgy. 001 - Tondo';
+  const userName = localStorage.getItem('denguewatch.userName') || localStorage.getItem('userName') || 'User';
+  const selectedCity = localStorage.getItem('denguewatch.selectedCity') || 
+                       localStorage.getItem('denguewatch.selectedBarangay') || 
+                       localStorage.getItem('selectedBarangay') || 
+                       'Select Location';
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Close drawer when navigating
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [location.pathname]);
 
   const handleChangeBarangay = () => {
+    localStorage.removeItem('denguewatch.selectedBarangay');
     localStorage.removeItem('selectedBarangay');
     setDrawerOpen(false);
     navigate('/select-barangay');
@@ -47,103 +67,112 @@ function MainLayout({ children, pageTitle = 'Dashboard' }) {
 
   const closeDrawer = () => setDrawerOpen(false);
 
+  // Get active nav item
+  const activeNav = navItems.find(item => location.pathname === item.to);
+
   return (
-    <div className="flex min-h-screen bg-sand text-ink">
+    <div className="flex min-h-screen bg-paper text-ink">
       {/* Mobile Drawer Overlay */}
       {drawerOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 transition-opacity md:hidden"
+          className="fixed inset-0 z-40 bg-black/50 transition-opacity duration-300 md:hidden"
           onClick={closeDrawer}
+          role="presentation"
         />
       )}
 
       {/* Mobile Slide-out Drawer */}
       <div
-        className={`fixed left-0 top-0 z-50 flex h-screen w-4/5 max-w-xs flex-col bg-navy text-white shadow-soft transition-transform duration-300 md:hidden ${
+        className={`fixed left-0 top-0 z-50 flex h-screen w-4/5 max-w-xs flex-col bg-navy text-white shadow-2xl transition-transform duration-300 md:hidden ${
           drawerOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Drawer Header */}
-        <div className="flex items-center justify-between border-b border-white/10 p-4">
+        <div className="flex items-center justify-between border-b border-white/10 p-4 pt-6">
           <h2 className="text-lg font-bold">Menu</h2>
           <button
-            className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10"
+            className="flex h-10 w-10 items-center justify-center rounded-lg transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/30"
             onClick={closeDrawer}
+            aria-label="Close menu"
           >
-            <X size={20} />
+            <X size={24} />
           </button>
         </div>
 
         {/* User Info Section */}
         <div className="border-b border-white/10 p-4">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
-              <User size={24} />
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-white/20 to-white/10">
+              <User size={28} className="text-white/80" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="truncate font-semibold text-white">{userName}</p>
-              <p className="truncate text-xs text-white/70">{selectedBarangay}</p>
+              <p className="truncate font-semibold text-white text-sm">{userName}</p>
+              <p className="truncate text-xs text-white/60 mt-1">{selectedCity}</p>
             </div>
           </div>
         </div>
 
         {/* Menu Items */}
-        <nav className="flex-1 space-y-1 p-4">
-          {/* Change Barangay */}
+        <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
+          {/* Change Location */}
           <button
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-white/80 transition hover:bg-white/10 hover:text-white"
             onClick={handleChangeBarangay}
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-white/80 transition-colors duration-200 hover:bg-white/10 hover:text-white active:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+            aria-label="Change location"
           >
-            <MapPin size={18} />
-            <span className="text-sm font-medium">Change Barangay</span>
+            <MapPin size={20} className="flex-shrink-0" />
+            <span className="text-sm font-medium">Change Location</span>
           </button>
 
           {/* About DengueWatch AI */}
           <button
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-white/80 transition hover:bg-white/10 hover:text-white"
             onClick={() => {
               setShowAboutModal(true);
               setDrawerOpen(false);
             }}
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-white/80 transition-colors duration-200 hover:bg-white/10 hover:text-white active:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+            aria-label="About DengueWatch AI"
           >
-            <Info size={18} />
-            <span className="text-sm font-medium">About DengueWatch AI</span>
+            <Info size={20} className="flex-shrink-0" />
+            <span className="text-sm font-medium">About DengueWatch</span>
           </button>
 
           {/* How It Works */}
           <button
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-white/80 transition hover:bg-white/10 hover:text-white"
             onClick={() => {
               setShowHowItWorksModal(true);
               setDrawerOpen(false);
             }}
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-white/80 transition-colors duration-200 hover:bg-white/10 hover:text-white active:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+            aria-label="How it works"
           >
-            <HelpCircle size={18} />
+            <HelpCircle size={20} className="flex-shrink-0" />
             <span className="text-sm font-medium">How It Works</span>
           </button>
         </nav>
 
         {/* Logout Button */}
-        <div className="border-t border-white/10 p-4">
+        <div className="border-t border-white/10 p-4 pb-6">
           <button
-            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-alert transition hover:bg-alert/10"
             onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-alert transition-colors duration-200 hover:bg-alert/10 active:bg-alert/20 focus:outline-none focus:ring-2 focus:ring-alert/30 font-medium"
+            aria-label="Logout"
           >
-            <LogOut size={18} />
+            <LogOut size={20} className="flex-shrink-0" />
             <span className="text-sm font-medium">Logout</span>
           </button>
         </div>
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex md:w-64 md:flex-col md:bg-navy md:text-white">
+      <aside className="hidden lg:flex lg:w-72 lg:flex-col lg:bg-navy lg:text-white lg:shadow-xl">
         {/* Logo/Title */}
-        <div className="flex h-16 items-center justify-center border-b border-white/10">
-          <h1 className="text-xl font-bold">DengueWatch AI</h1>
+        <div className="flex h-20 items-center justify-center border-b border-white/10 px-6">
+          <h1 className="text-2xl font-bold tracking-tight">DengueWatch</h1>
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="flex-1 px-4 py-6">
+        <nav className="flex-1 px-4 py-8">
           <ul className="space-y-2">
             {navItems.map(({ to, label, icon: Icon }) => {
               const isActive = location.pathname === to;
@@ -151,14 +180,14 @@ function MainLayout({ children, pageTitle = 'Dashboard' }) {
                 <li key={to}>
                   <NavLink
                     to={to}
-                    className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-white/30 ${
                       isActive
-                        ? 'bg-alert text-white'
-                        : 'text-white/80 hover:bg-white/10 hover:text-white'
+                        ? 'bg-alert text-white shadow-lg shadow-alert/30'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
                     }`}
                   >
-                    <Icon size={20} />
-                    {label}
+                    <Icon size={22} className="flex-shrink-0" />
+                    <span>{label}</span>
                   </NavLink>
                 </li>
               );
@@ -166,20 +195,30 @@ function MainLayout({ children, pageTitle = 'Dashboard' }) {
           </ul>
         </nav>
 
+        {/* Desktop Location Info */}
+        <div className="border-t border-white/10 p-4 mx-4 rounded-lg bg-white/5 mb-4">
+          <p className="text-xs text-white/60 font-semibold uppercase tracking-wide mb-2">Current Location</p>
+          <div className="flex items-center gap-2 text-white">
+            <MapPin size={16} className="flex-shrink-0 text-alert" />
+            <p className="truncate text-sm font-medium">{selectedCity}</p>
+          </div>
+        </div>
+
         {/* Desktop User Info & Logout */}
         <div className="border-t border-white/10 p-4">
           <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
-              <User size={18} />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-white/20 to-white/10 flex-shrink-0">
+              <User size={24} className="text-white/80" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="truncate text-sm font-semibold text-white">{userName}</p>
-              <p className="truncate text-xs text-white/70">{selectedBarangay}</p>
+              <p className="truncate text-xs text-white/60 mt-1">User</p>
             </div>
           </div>
           <button
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-alert transition hover:bg-alert/10"
             onClick={handleLogout}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-alert transition-colors duration-200 hover:bg-alert/10 focus:outline-none focus:ring-2 focus:ring-alert/30"
+            aria-label="Logout"
           >
             <LogOut size={18} />
             Logout
@@ -188,50 +227,71 @@ function MainLayout({ children, pageTitle = 'Dashboard' }) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex flex-1 flex-col md:ml-0">
+      <div className="flex flex-1 flex-col">
         {/* Top Header */}
-        <header className="flex h-14 items-center justify-between bg-navy px-4 py-3 text-white shadow-soft md:px-6">
-          {/* Left: Menu Icon (Mobile Only) */}
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between bg-white border-b border-navy/10 px-4 py-3 shadow-sm md:px-6 lg:px-8">
+          {/* Left: Menu Icon (Mobile/Tablet) */}
           <button
-            className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-white/10 md:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-lg transition-colors duration-200 hover:bg-navy/10 focus:outline-none focus:ring-2 focus:ring-navy/20 lg:hidden"
             onClick={() => setDrawerOpen(true)}
+            aria-label="Open menu"
+            aria-expanded={drawerOpen}
           >
-            <Menu size={20} />
+            <Menu size={24} className="text-navy" />
           </button>
 
-          {/* Center: Page Title */}
-          <h2 className="text-lg font-bold md:flex-1 md:text-left">{pageTitle}</h2>
+          {/* Center: Location Display */}
+          <div className="flex-1 mx-4 flex items-center gap-2 min-w-0">
+            <MapPin size={18} className="text-navy flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs text-ink/60 font-medium">Location</p>
+              <p className="truncate text-sm font-semibold text-navy">{selectedCity}</p>
+            </div>
+          </div>
 
-          {/* Right: Barangay + Avatar */}
-          <div className="flex items-center gap-2">
-            <span className="truncate text-xs font-medium md:text-sm">{selectedBarangay}</span>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 flex-shrink-0">
-              <User size={14} />
+          {/* Right: Page Title + Avatar */}
+          <div className="flex items-center gap-4 min-w-0">
+            {/* Page Title - Hidden on mobile */}
+            <span className="hidden md:block text-sm font-semibold text-navy truncate">
+              {pageTitle}
+            </span>
+            {/* Avatar */}
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-navy/10 border-2 border-navy/20 flex-shrink-0">
+              <User size={20} className="text-navy" />
             </div>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-sand pb-20 md:pb-0">
-          <div className="mx-auto w-full max-w-lg px-4 py-6 md:max-w-none md:px-6">
+        <main className="flex-1 overflow-y-auto bg-paper pb-20 md:pb-0 lg:pb-0">
+          <div className="mx-auto w-full max-w-full px-4 py-6 md:px-6 lg:px-8 lg:max-w-7xl">
             {children}
           </div>
         </main>
 
         {/* Mobile Bottom Navigation Bar */}
-        <nav className="fixed bottom-0 left-0 right-0 flex h-16 items-center justify-around border-t border-navy/10 bg-white shadow-soft md:hidden">
+        <nav className="fixed bottom-0 left-0 right-0 flex h-20 items-center justify-around border-t border-navy/10 bg-white shadow-2xl md:hidden pb-safe" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
           {navItems.map(({ to, label, icon: Icon }) => {
             const isActive = location.pathname === to;
             return (
               <NavLink
                 key={to}
                 to={to}
-                className={`flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors ${
-                  isActive ? 'text-alert' : 'text-ink/50'
+                className={`group flex flex-col items-center justify-center gap-1.5 px-3 py-2 transition-all duration-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy/20 flex-1 ${
+                  isActive
+                    ? 'text-alert'
+                    : 'text-ink/50 hover:text-ink/70'
                 }`}
+                aria-label={label}
+                aria-current={isActive ? 'page' : undefined}
               >
-                <Icon size={24} />
-                <span className="text-xs font-medium">{label}</span>
+                <div className={`transition-transform duration-200 ${isActive ? 'scale-110' : 'group-active:scale-95'}`}>
+                  <Icon size={26} />
+                </div>
+                <span className="text-xs font-semibold leading-tight">{label}</span>
+                {isActive && (
+                  <div className="h-1 w-6 bg-alert rounded-full mt-0.5" />
+                )}
               </NavLink>
             );
           })}
@@ -240,38 +300,64 @@ function MainLayout({ children, pageTitle = 'Dashboard' }) {
 
       {/* About Modal */}
       {showAboutModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 rounded-2xl bg-white p-6 shadow-soft max-w-sm">
-            <h3 className="text-lg font-bold text-navy">About DengueWatch AI</h3>
-            <p className="mt-4 text-sm text-ink/70">
-              DengueWatch AI is an AI-powered dengue risk prediction system
-              designed to help communities stay informed about dengue activity
-              in their area. Get personalized alerts and health insights powered
-              by machine learning.
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 transition-opacity duration-300 p-4">
+          <div className="mx-auto w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl md:rounded-2xl animate-in fade-in slide-in-from-bottom-4 md:slide-in-from-bottom-0 duration-300">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-alert/10">
+                <Info size={24} className="text-alert" />
+              </div>
+              <h3 className="text-xl font-bold text-navy">About DengueWatch</h3>
+            </div>
+            <p className="text-sm text-ink/70 leading-relaxed">
+              DengueWatch AI is an AI-powered dengue risk prediction system designed to help communities stay informed about dengue activity in their area. Get personalized alerts and health insights powered by machine learning and real-time data analysis.
             </p>
-            <button
-              className="mt-6 w-full rounded-lg bg-navy px-4 py-2 text-white transition hover:bg-navy/90"
-              onClick={() => setShowAboutModal(false)}
-            >
-              Close
-            </button>
+            <div className="mt-6 flex gap-3">
+              <button
+                className="flex-1 rounded-xl bg-navy px-4 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-navy/90 active:scale-95 focus:outline-none focus:ring-2 focus:ring-navy/30"
+                onClick={() => setShowAboutModal(false)}
+              >
+                Got it
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* How It Works Modal */}
       {showHowItWorksModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 rounded-2xl bg-white p-6 shadow-soft max-w-sm">
-            <h3 className="text-lg font-bold text-navy">How It Works</h3>
-            <p className="mt-4 text-sm text-ink/70">
-              DengueWatch AI uses historical case data, humidity levels, and case
-              clustering patterns to predict dengue risk in your barangay. Our AI
-              model analyzes trends and provides real-time alerts to help you stay
-              safe.
-            </p>
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 transition-opacity duration-300 p-4">
+          <div className="mx-auto w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl md:rounded-2xl animate-in fade-in slide-in-from-bottom-4 md:slide-in-from-bottom-0 duration-300">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                <HelpCircle size={24} className="text-blue-600" />
+              </div>
+              <h3 className="text-xl font-bold text-navy">How It Works</h3>
+            </div>
+            <div className="space-y-3 mb-6">
+              <div className="flex gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-navy/10 text-navy font-semibold text-xs flex-shrink-0">1</div>
+                <div>
+                  <p className="text-sm font-semibold text-ink">Collects Data</p>
+                  <p className="text-xs text-ink/60">Historical cases, weather, and location data</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-navy/10 text-navy font-semibold text-xs flex-shrink-0">2</div>
+                <div>
+                  <p className="text-sm font-semibold text-ink">Analyzes Patterns</p>
+                  <p className="text-xs text-ink/60">AI model identifies risk trends and clusters</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-navy/10 text-navy font-semibold text-xs flex-shrink-0">3</div>
+                <div>
+                  <p className="text-sm font-semibold text-ink">Sends Alerts</p>
+                  <p className="text-xs text-ink/60">Real-time notifications for your area</p>
+                </div>
+              </div>
+            </div>
             <button
-              className="mt-6 w-full rounded-lg bg-navy px-4 py-2 text-white transition hover:bg-navy/90"
+              className="w-full rounded-xl bg-navy px-4 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-navy/90 active:scale-95 focus:outline-none focus:ring-2 focus:ring-navy/30"
               onClick={() => setShowHowItWorksModal(false)}
             >
               Close
