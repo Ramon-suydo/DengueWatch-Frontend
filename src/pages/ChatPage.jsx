@@ -9,7 +9,7 @@ function ChatPage() {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+  const API_URL = process.env.REACT_APP_CHAT_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:5000' : '');
 
   // Suggested starter questions
   const STARTER_QUESTIONS = [
@@ -33,7 +33,8 @@ function ChatPage() {
   const sendMessage = async (messageText = null) => {
     const textToSend = messageText || input.trim();
     
-    if (!textToSend) return;
+    if (!textToSend || loading) return;
+    if (textToSend.length > 2000) { setError('Message must be at most 2000 characters.'); return; }
 
     // Add user message to chat
     const userMessage = { role: 'user', content: textToSend };
@@ -51,7 +52,7 @@ function ChatPage() {
         },
         body: JSON.stringify({
           message: textToSend,
-          history: messages
+          history: messages.slice(-10)
         })
       });
 

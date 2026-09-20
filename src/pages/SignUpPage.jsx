@@ -1,3 +1,4 @@
+import api from '../services/api';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import BrandMark from '../components/BrandMark';
@@ -6,10 +7,12 @@ import LandingLayout from '../layout/LandingLayout';
 function SignUpPage() {
   const navigate = useNavigate();
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setError('');
+    if (loading) return;
 
     const formData = new FormData(event.currentTarget);
     const fullName = formData.get('fullName');
@@ -25,8 +28,8 @@ function SignUpPage() {
       setError('Email is required.');
       return;
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
       return;
     }
     if (password !== confirmPassword) {
@@ -34,10 +37,16 @@ function SignUpPage() {
       return;
     }
 
-    localStorage.setItem('denguewatch.userName', fullName.trim());
-    localStorage.setItem('denguewatch.userEmail', email.trim());
-
-    navigate('/select-city');
+    setLoading(true);
+    try {
+      const result = await api.register(fullName.trim(), email.trim(), password, confirmPassword);
+      localStorage.setItem('denguewatch.token', result.data.token);
+      localStorage.setItem('denguewatch.userName', result.data.user.name);
+      localStorage.setItem('denguewatch.userEmail', result.data.user.email);
+      localStorage.setItem('denguewatch.role', result.data.user.role);
+      navigate('/select-city');
+    } catch (err) { setError(err.message || 'Registration failed'); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -101,7 +110,7 @@ function SignUpPage() {
                 className="w-full rounded-2xl border border-navy/10 bg-white px-4 py-3.5 text-base text-ink shadow-soft outline-none transition placeholder:text-ink/35 focus:border-navy/30 focus:ring-4 focus:ring-navy/10"
                 id="password"
                 name="password"
-                placeholder="Create a password (min. 6 characters)"
+                placeholder="Create a password (min. 8 characters)"
                 required
                 type="password"
               />
@@ -123,7 +132,7 @@ function SignUpPage() {
 
             <button
               className="w-full rounded-2xl bg-navy px-8 py-4 text-base font-semibold text-paper shadow-button transition hover:-translate-y-0.5 hover:bg-[#0f3460]"
-              type="submit"
+              type="submit" disabled={loading}
             >
               Create Account
             </button>

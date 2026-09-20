@@ -1,3 +1,4 @@
+// LEGACY VARIANT: not imported by the live src/App.js routes. See AUDIT_ROUTES.md.
 import { useState, useEffect } from 'react';
 import { TrendingUp, BarChart3, LineChart as LineChartIcon } from 'lucide-react';
 import { Card, ProgressBar, Timeline, EmptyState } from '../components/UIComponents';

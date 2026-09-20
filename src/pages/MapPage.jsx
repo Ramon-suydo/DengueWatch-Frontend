@@ -201,18 +201,20 @@ const ProvincesLayer = ({ predictions }) => {
 const MapPage = () => {
   const [predictions, setPredictions] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     api.getAllCityRisks()
         .then(res => {
             if (res.success) setPredictions(res.data);
         })
-        .catch(err => console.error(err))
+        .catch(err => setError(err.message))
         .finally(() => setLoading(false));
   }, []);
 
   return (
     <div style={{ height: 'calc(100vh - 64px)', width: '100%', position: 'relative' }}>
+      {error && <div role="alert" style={{position: "absolute", zIndex: 1100, background: "white", padding: 16}}>{error}</div>}
       {loading && (
         <div style={{
           position: 'absolute', top: '50%', left: '50%',

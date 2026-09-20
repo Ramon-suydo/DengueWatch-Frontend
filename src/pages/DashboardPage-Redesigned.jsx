@@ -1,3 +1,4 @@
+// LEGACY VARIANT: not imported by the live src/App.js routes. See AUDIT_ROUTES.md.
 import { useEffect, useState } from 'react';
 import { TrendingUp, Cloud, Droplet, Wind, Calendar, Clock, AlertCircle, CheckCircle } from 'lucide-react';
 import api from '../services/api';

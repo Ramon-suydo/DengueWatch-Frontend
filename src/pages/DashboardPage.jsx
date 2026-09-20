@@ -25,14 +25,14 @@ function DashboardPage() {
         if (predictionRes.success) setPrediction(predictionRes.data);
         else setError('Failed to load prediction data');
       })
-      .catch(() => setError('Could not connect to server'))
+      .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, [selectedCity]);
 
-  const riskScore = prediction?.riskPercentage || 0;
+  const riskScore = prediction?.riskScore || 0;
   const riskLevel = prediction?.riskLevel || 'Low';
   const riskLevelDisplay = `${riskLevel.toUpperCase()} RISK`;
-  const aiConfidence = prediction?.confidence || 0;
+  const dataCompleteness = prediction?.dataCompletenessScore || 0;
   const totalReports = summary?.totalReports || 0;
 
   const getRiskBorderColor = () => {
@@ -102,7 +102,7 @@ function DashboardPage() {
           </div>
           <div className="space-y-2">
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-navy">{riskScore}%</span>
+              <span className="text-2xl font-bold text-navy">{riskScore}/100</span>
               <span className="text-sm font-medium text-ink/60">Risk Score</span>
             </div>
             <div className="h-2 w-full rounded-full bg-ink/10">
@@ -114,7 +114,7 @@ function DashboardPage() {
           </div>
           <div className="pt-2">
             <p className="text-sm font-semibold text-navy">
-              AI Confidence: <span className="text-ink/70">{aiConfidence}%</span>
+              Data Completeness: <span className="text-ink/70">{dataCompleteness}%</span>
             </p>
           </div>
           <p className="text-xs text-ink/60 leading-relaxed">
@@ -196,17 +196,17 @@ function DashboardPage() {
         </div>
       </section>
 
-      {/* AI Confidence Score Card */}
+      {/* Data Completeness Score Card */}
       <section className="rounded-2xl bg-white p-6 shadow-soft">
         <p className="text-xs font-bold uppercase tracking-wider text-ink/50">
-          AI Confidence Score
+          Data Completeness Score
         </p>
         <div className="mt-4 flex items-center gap-4">
           <div>
-            <p className="text-4xl font-black text-navy">{prediction?.confidence || 0}%</p>
+            <p className="text-4xl font-black text-navy">{prediction?.dataCompletenessScore || 0}%</p>
             <p className="mt-1 text-xs text-ink/60">
               Based on {prediction?.factors?.historical?.recordCount || 0} DOH records
-              Model: Weighted Ensemble
+              Method: {prediction?.modelUsed}
             </p>
           </div>
           <div className="ml-auto flex h-20 w-20 items-center justify-center rounded-full border-4 border-navy/20">

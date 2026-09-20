@@ -1,3 +1,4 @@
+// LEGACY VARIANT: not imported by the live src/App.js routes. See AUDIT_ROUTES.md.
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Check, ChevronRight, MapPin } from 'lucide-react';

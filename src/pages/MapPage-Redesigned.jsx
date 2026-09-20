@@ -1,3 +1,4 @@
+// LEGACY VARIANT: not imported by the live src/App.js routes. See AUDIT_ROUTES.md.
 import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
 import L from 'leaflet';

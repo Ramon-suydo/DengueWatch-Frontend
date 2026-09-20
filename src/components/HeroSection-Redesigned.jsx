@@ -1,3 +1,4 @@
+// LEGACY VARIANT: not imported by the live src/App.js routes. See AUDIT_ROUTES.md.
 import { Link } from 'react-router-dom';
 import { TrendingUp, MapPin, AlertCircle } from 'lucide-react';
 

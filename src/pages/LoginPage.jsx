@@ -55,7 +55,7 @@ function LoginPage() {
         showToast(res.message || 'Invalid credentials', 'error');
       }
     } catch (err) {
-      showToast('Could not connect to server. Please check your connection.', 'error');
+      showToast(err.message || 'Login failed', 'error');
       console.error('Login error:', err);
     } finally {
       setLoading(false);
